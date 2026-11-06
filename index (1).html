@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>Nindo Academy — Pesquisa do Arco da Resiliência</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ==========================================================================
+     CONFIGURAÇÃO — preencha esta linha depois de publicar o Apps Script.
+     Cole aqui a URL do app da Web (termina em /exec). Enquanto estiver vazia,
+     o formulário mostra um aviso e não envia.
+     ========================================================================== */
+  /* (a URL fica no <script> lá embaixo, na constante SUBMIT_URL) */
+
+  :root{
+    --roxo:#5B21B6; --roxo-claro:#7C3AED; --teal:#0F766E;
+    --tinta:#1f2937; --cinza:#6b7280; --linha:#e5e7eb; --fundo:#f5f3ff;
+    --ok:#15803d;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:linear-gradient(160deg,#ede9fe 0%,#f5f3ff 40%,#ecfeff 100%);
+    color:var(--tinta); line-height:1.55; min-height:100vh;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:24px 16px 64px}
+  header.hero{
+    background:linear-gradient(135deg,var(--roxo) 0%,var(--roxo-claro) 100%);
+    color:#fff; border-radius:20px; padding:28px 24px; margin-bottom:22px;
+    box-shadow:0 10px 30px rgba(91,33,182,.25);
+  }
+  .brand{font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; opacity:.85}
+  header.hero h1{margin:6px 0 8px; font-size:26px; line-height:1.2}
+  header.hero p{margin:0; font-size:15px; opacity:.92}
+  .emoji{font-size:20px}
+  .card{
+    background:#fff; border:1px solid var(--linha); border-radius:16px;
+    padding:20px 20px 22px; margin-bottom:16px; box-shadow:0 2px 10px rgba(16,24,40,.04);
+  }
+  .q-num{display:inline-block; font-size:12px; font-weight:700; color:var(--roxo-claro); letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px}
+  .q-title{font-size:16px; font-weight:600; margin:0 0 4px}
+  .q-help{font-size:13px; color:var(--cinza); margin:0 0 14px}
+  .req{color:#dc2626; font-weight:700}
+  textarea,input[type=text]{
+    width:100%; border:1.5px solid var(--linha); border-radius:10px; padding:12px 14px;
+    font:inherit; color:var(--tinta); resize:vertical; background:#fff;
+  }
+  textarea:focus,input[type=text]:focus{outline:none; border-color:var(--roxo-claro); box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+  textarea{min-height:92px}
+  /* escala 1-10 */
+  .scale{display:flex; flex-wrap:wrap; gap:8px}
+  .scale label{flex:1 1 auto; min-width:40px}
+  .scale input{position:absolute; opacity:0; pointer-events:none}
+  .scale span{
+    display:block; text-align:center; padding:10px 0; border:1.5px solid var(--linha);
+    border-radius:10px; font-weight:600; font-size:15px; cursor:pointer; user-select:none; transition:.12s;
+  }
+  .scale input:checked + span{background:var(--roxo); color:#fff; border-color:var(--roxo)}
+  .scale span:hover{border-color:var(--roxo-claro)}
+  .scale-ends{display:flex; justify-content:space-between; font-size:12px; color:var(--cinza); margin-top:8px}
+  /* múltipla escolha */
+  .choice{display:flex; flex-direction:column; gap:8px}
+  .choice label{
+    display:flex; align-items:center; gap:10px; border:1.5px solid var(--linha);
+    border-radius:10px; padding:12px 14px; cursor:pointer; transition:.12s; font-size:15px;
+  }
+  .choice label:hover{border-color:var(--roxo-claro)}
+  .choice input{accent-color:var(--roxo); width:18px; height:18px; flex:none}
+  .choice input:checked + span{font-weight:600}
+  .choice label:has(input:checked){border-color:var(--roxo); background:#faf5ff}
+  .optional-tag{font-size:12px; font-weight:600; color:var(--teal); background:#ccfbf1; padding:2px 8px; border-radius:999px; margin-left:6px}
+  .btn{
+    width:100%; background:var(--roxo); color:#fff; border:none; border-radius:12px;
+    padding:16px; font:inherit; font-weight:700; font-size:16px; cursor:pointer; transition:.12s;
+    box-shadow:0 6px 18px rgba(91,33,182,.3);
+  }
+  .btn:hover{background:#4c1d95}
+  .btn:disabled{opacity:.6; cursor:not-allowed; box-shadow:none}
+  .aviso{background:#fef9c3; border:1px solid #fde047; color:#854d0e; border-radius:12px; padding:14px 16px; font-size:14px; margin-bottom:16px}
+  .erro{background:#fee2e2; border:1px solid #fecaca; color:#991b1b; border-radius:12px; padding:14px 16px; font-size:14px; margin:14px 0}
+  .foot{text-align:center; font-size:12px; color:var(--cinza); margin-top:20px}
+  /* sucesso */
+  .sucesso{text-align:center; padding:40px 24px}
+  .sucesso .selo{width:72px; height:72px; border-radius:50%; background:#dcfce7; color:var(--ok);
+    display:flex; align-items:center; justify-content:center; font-size:36px; margin:0 auto 18px}
+  .sucesso h2{margin:0 0 10px; color:var(--roxo); font-size:22px}
+  .sucesso p{color:var(--cinza); margin:0 auto; max-width:360px}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="brand">🥷 Nindo Academy</div>
+    <h1>Como foi o Arco da Resiliência pra você?</h1>
+    <p>Você acabou de percorrer a jornada do Rock Lee. Leva 2 minutinhos e ajuda demais a construir as próximas trilhas. <span class="emoji">✨</span></p>
+  </header>
+
+  <div id="avisoConfig" class="aviso hidden">
+    ⚠️ Este formulário ainda não está conectado à planilha. (Admin: preencha a constante <b>SUBMIT_URL</b> no código.)
+  </div>
+
+  <form id="form">
+
+    <div class="card">
+      <span class="q-num">Pergunta 1</span>
+      <p class="q-title">O que mais marcou você — e o que faltou?</p>
+      <p class="q-help">Pode escrever à vontade. É a resposta que mais nos ajuda.</p>
+      <textarea name="aberta" placeholder="Escreva aqui..."></textarea>
+    </div>
+
+    <div class="card">
+      <span class="q-num">Pergunta 2</span>
+      <p class="q-title">O quanto esta trilha foi útil para a sua vida real? <span class="req">*</span></p>
+      <div class="scale" data-group="utilidade"></div>
+      <div class="scale-ends"><span>1 · Não me ajudou</span><span>10 · Mudou meu jeito de ver</span></div>
+    </div>
+
+    <div class="card">
+      <span class="q-num">Pergunta 3</span>
+      <p class="q-title">Qual a chance de você recomendar a Nindo a um amigo? <span class="req">*</span></p>
+      <div class="scale" data-group="recomendaria"></div>
+      <div class="scale-ends"><span>1 · Nunca</span><span>10 · Com certeza</span></div>
+    </div>
+
+    <div class="card">
+      <span class="q-num">Pergunta 4</span>
+      <p class="q-title">Até onde você foi na trilha? <span class="req">*</span></p>
+      <div class="choice">
+        <label><input type="radio" name="conclusao" value="Concluí as 10 aulas"><span>Concluí as 10 aulas</span></label>
+        <label><input type="radio" name="conclusao" value="Fiz mais da metade"><span>Fiz mais da metade</span></label>
+        <label><input type="radio" name="conclusao" value="Fiz algumas e parei"><span>Fiz algumas e parei</span></label>
+        <label><input type="radio" name="conclusao" value="Só dei uma olhada"><span>Só dei uma olhada</span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="q-num">Pergunta 5</span>
+      <p class="q-title">Se a Nindo lançasse novas trilhas por um preço acessível, você pagaria? <span class="req">*</span></p>
+      <div class="choice">
+        <label><input type="radio" name="pagaria" value="Sim, com certeza"><span>Sim, com certeza</span></label>
+        <label><input type="radio" name="pagaria" value="Talvez"><span>Talvez</span></label>
+        <label><input type="radio" name="pagaria" value="Não"><span>Não</span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="q-num">Perfil <span class="optional-tag">opcional</span></span>
+      <p class="q-title">Quantos anos você tem?</p>
+      <input type="text" name="idade" inputmode="numeric" placeholder="Ex.: 22" style="margin-bottom:16px">
+      <p class="q-title">Como você conheceu a Nindo?</p>
+      <input type="text" name="origem" placeholder="Ex.: Instagram, um amigo, YouTube...">
+    </div>
+
+    <div id="erro" class="erro hidden"></div>
+    <button type="submit" id="btn" class="btn">Enviar minha resposta 🥷</button>
+    <p class="foot">Anônimo: não pedimos seu nome nem e-mail.</p>
+  </form>
+
+  <div id="sucesso" class="sucesso hidden">
+    <div class="selo">✓</div>
+    <h2>Resposta enviada! Arigatô 🙏</h2>
+    <p>Sua opinião vai ajudar a construir as próximas trilhas da Nindo. Pode fechar esta página.</p>
+  </div>
+
+</div>
+
+<script>
+  // ====== CONFIGURAÇÃO ======
+  // Cole aqui a URL do app da Web do Apps Script (termina em /exec):
+  const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbx_naN580-C5llzbyvWAss4QW0l2JFSidCLLbddzw0F3NwaMp4HDImCCEqnzXE8v9PlWQ/exec";
+  // ==========================
+
+  // monta as escalas 1-10
+  document.querySelectorAll('.scale').forEach(function(scale){
+    const group = scale.getAttribute('data-group');
+    for(let i=1;i<=10;i++){
+      const lbl = document.createElement('label');
+      lbl.innerHTML = '<input type="radio" name="'+group+'" value="'+i+'"><span>'+i+'</span>';
+      scale.appendChild(lbl);
+    }
+  });
+
+  if(!SUBMIT_URL){ document.getElementById('avisoConfig').classList.remove('hidden'); }
+
+  const form = document.getElementById('form');
+  const btn = document.getElementById('btn');
+  const erroBox = document.getElementById('erro');
+
+  function val(name){
+    const el = form.querySelector('[name="'+name+'"]:checked') || form.querySelector('[name="'+name+'"]');
+    return el ? el.value.trim() : '';
+  }
+
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    erroBox.classList.add('hidden');
+
+    // validação dos obrigatórios
+    const faltando = [];
+    if(!val('utilidade')) faltando.push('a nota de utilidade (P2)');
+    if(!val('recomendaria')) faltando.push('a nota de recomendação (P3)');
+    if(!val('conclusao')) faltando.push('até onde você foi (P4)');
+    if(!val('pagaria')) faltando.push('se você pagaria (P5)');
+    if(faltando.length){
+      erroBox.textContent = 'Falta responder: ' + faltando.join(', ') + '.';
+      erroBox.classList.remove('hidden');
+      erroBox.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+
+    if(!SUBMIT_URL){
+      erroBox.textContent = 'O formulário ainda não está conectado à planilha. Avise o administrador.';
+      erroBox.classList.remove('hidden');
+      return;
+    }
+
+    const payload = {
+      aberta: val('aberta'),
+      utilidade: val('utilidade'),
+      recomendaria: val('recomendaria'),
+      conclusao: val('conclusao'),
+      pagaria: val('pagaria'),
+      idade: val('idade'),
+      origem: val('origem'),
+      enviadoEm: new Date().toISOString()
+    };
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    try{
+      const r = await fetch(SUBMIT_URL, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify(payload),
+        redirect:'follow'
+      });
+      const result = await r.json();
+      if(!result.ok) throw new Error(result.error || 'Resposta inesperada da planilha.');
+      form.classList.add('hidden');
+      document.getElementById('sucesso').classList.remove('hidden');
+      window.scrollTo({top:0, behavior:'smooth'});
+    }catch(err){
+      btn.disabled = false;
+      btn.textContent = 'Enviar minha resposta 🥷';
+      erroBox.textContent = 'Não consegui enviar. Verifique sua conexão e tente de novo.';
+      erroBox.classList.remove('hidden');
+    }
+  });
+</script>
+</body>
+</html>
